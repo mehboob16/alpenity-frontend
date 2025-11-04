@@ -1,0 +1,140 @@
+/* --- Header Styles --- */
+.site-header {
+  width: 100%;
+  background-color: #1a1a1a;
+  color: white;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #333;
+}
+
+.site-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.site-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.site-nav a {
+  color: #eee;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.site-nav a:hover {
+  color: #007bff;
+}
+
+.site-nav a.header-contact-btn {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: 1px solid var(--color-primary);
+}
+.site-nav a.header-contact-btn:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+/* --- Main Content Area --- */
+.main-content {
+  flex: 1; /* Makes footer stick to bottom */
+  width: 100%;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.status-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #777;
+  padding: 6rem 2rem;
+}
+
+.status-message .refresh-btn {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1.5rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.status-message .refresh-btn:hover {
+  background-color: #0056b3;
+}
+
+/* --- Footer Styles --- */
+.site-footer {
+  background-color: #1a1a1a;
+  color: #ccc;
+  padding: 4rem 2rem 1rem 2rem;
+  margin-top: 4rem;
+}
+
+.site-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #333;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.footer-col .footer-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.footer-col h4 {
+  color: white;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+.footer-col a {
+  color: #ccc;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.footer-col a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.site-footer-bottom {
+  max-width: 1200px;
+  margin: 1rem auto 0 auto;
+  text-align: left;
+  font-size: 0.8rem;
+  color: #888;
+}
