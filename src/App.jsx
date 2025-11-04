@@ -3,9 +3,8 @@ import ArticlePage from "./components/ArticlePage";
 import "./components/AppHeaderFooter.css"; // <-- IMPORT THE NEW CSS
 
 // --- URLs (Same as before) ---
-const BACKEND_API_URL = "http://localhost:3001/api/article";
+const BACKEND_API_URL = "https://alpenity-backend.onrender.com/api/article";
 // !!! PASTE YOUR WEBHOOK URL HERE (from your NEW n8n workflow)
-const N8N_WEBHOOK_URL = "YOUR_N8N_WEBHOOK_URL_HERE";
 
 // --- Simple Header Component (to match Alpenity) ---
 function SiteHeader() {
