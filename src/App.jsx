@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ArticlePage from "./components/ArticlePage";
+import AdminPane from "./components/AdminPane"; // <-- IMPORT THE NEW ADMIN PANE
 import "./components/AppHeaderFooter.css"; // <-- IMPORT THE NEW CSS
 
 // --- URLs (Same as before) ---
@@ -20,6 +21,19 @@ function SiteHeader() {
           <a href="#">Newsroom</a>
           <a href="#" className="header-contact-btn">
             Contact Us
+          </a>
+
+          {/* NEW: Admin link — uses pushState + popstate to avoid full page reload */}
+          <a
+            href="/admin"
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.pushState({}, "", "/admin");
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }}
+            style={{ marginLeft: 12, color: "#2a9d8f" }}
+          >
+            Admin
           </a>
         </nav>
       </div>
@@ -58,6 +72,20 @@ function SiteFooter() {
 
 // --- Main App ---
 function App() {
+  // Simple routing based on URL path
+  const [route, setRoute] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => setRoute(window.location.pathname);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  if (route === "/admin") {
+    return <AdminPane />;
+  }
+
+  // --- Original App Logic for Article View ---
   const [article, setArticle] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
