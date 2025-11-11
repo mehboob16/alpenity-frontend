@@ -4,7 +4,7 @@ import AdminPane from "./components/AdminPane"; // <-- IMPORT THE NEW ADMIN PANE
 import "./components/AppHeaderFooter.css"; // <-- IMPORT THE NEW CSS
 
 // --- URLs (Same as before) ---
-const BACKEND_API_URL = "https://alpenity-backend.onrender.com/api/article";
+const BACKEND_API_URL = "https://alpenity-backend.onrender.com";
 // !!! PASTE YOUR WEBHOOK URL HERE (from your NEW n8n workflow)
 
 // --- Simple Header Component (to match Alpenity) ---
