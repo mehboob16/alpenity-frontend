@@ -99,10 +99,12 @@ export default function AdminPane() {
           >
             Clear Logs
           </button>
+
+          {/* Back using hash routing so direct /admin visits don't 404 */}
           <button
             onClick={() => {
-              window.history.pushState({}, "", "/");
-              window.dispatchEvent(new PopStateEvent("popstate"));
+              window.location.hash = "/";
+              // trigger hashchange if needed (browsers do this automatically)
             }}
             style={{ marginLeft: 8 }}
           >

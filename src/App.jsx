@@ -4,7 +4,7 @@ import AdminPane from "./components/AdminPane"; // <-- IMPORT THE NEW ADMIN PANE
 import "./components/AppHeaderFooter.css"; // <-- IMPORT THE NEW CSS
 
 // --- URLs (Same as before) ---
-const BACKEND_API_URL = "https://alpenity-backend.onrender.com";
+const BACKEND_API_URL = "https://alpenity-backend.onrender.com/api/article"; // <-- FIX: include /api/article
 // !!! PASTE YOUR WEBHOOK URL HERE (from your NEW n8n workflow)
 
 // --- Simple Header Component (to match Alpenity) ---
@@ -23,13 +23,12 @@ function SiteHeader() {
             Contact Us
           </a>
 
-          {/* NEW: Admin link — uses pushState + popstate to avoid full page reload */}
+          {/* NEW: Admin link — use hash routing to avoid server 404 on direct visits */}
           <a
-            href="/admin"
+            href="#/admin"
             onClick={(e) => {
               e.preventDefault();
-              window.history.pushState({}, "", "/admin");
-              window.dispatchEvent(new PopStateEvent("popstate"));
+              window.location.hash = "/admin";
             }}
             style={{ marginLeft: 12, color: "#2a9d8f" }}
           >
@@ -72,13 +71,15 @@ function SiteFooter() {
 
 // --- Main App ---
 function App() {
-  // Simple routing based on URL path
-  const [route, setRoute] = useState(window.location.pathname);
+  // Use hash-based routing to avoid server 404 on direct /admin visits
+  const getRouteFromHash = () =>
+    window.location.hash ? window.location.hash.slice(1) : "/";
+  const [route, setRoute] = useState(getRouteFromHash());
 
   useEffect(() => {
-    const handlePopState = () => setRoute(window.location.pathname);
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    const handleHash = () => setRoute(getRouteFromHash());
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
   }, []);
 
   if (route === "/admin") {
@@ -93,7 +94,7 @@ function App() {
   const fetchArticle = () => {
     setIsLoading(true);
     setError(null);
-    fetch(BACKEND_API_URL)
+    fetch(BACKEND_API_URL) // uses fixed URL above
       .then((res) => {
         if (!res.ok) throw new Error("No article found. Waiting for n8n...");
         return res.json();
