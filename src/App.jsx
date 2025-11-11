@@ -3,9 +3,12 @@ import ArticlePage from "./components/ArticlePage";
 import AdminPane from "./components/AdminPane"; // <-- IMPORT THE NEW ADMIN PANE
 import "./components/AppHeaderFooter.css"; // <-- IMPORT THE NEW CSS
 
-// --- URLs (Same as before) ---
-const BACKEND_API_URL = "https://alpenity-backend.onrender.com/api/article"; // <-- FIX: include /api/article
-// !!! PASTE YOUR WEBHOOK URL HERE (from your NEW n8n workflow)
+// --- URLs ---
+const BACKEND_API_URL = "https://alpenity-backend.onrender.com/api/article"; // <- FIXED: full article endpoint
+const BACKEND_BASE = "https://alpenity-backend.onrender.com"; // used for admin pane if needed
+
+// NOTE: set your actual webhook here (or via env replacement). Keep empty to disable.
+const N8N_WEBHOOK_URL = ""; // <-- SAFE default to avoid ReferenceError
 
 // --- Simple Header Component (to match Alpenity) ---
 function SiteHeader() {
@@ -23,7 +26,7 @@ function SiteHeader() {
             Contact Us
           </a>
 
-          {/* NEW: Admin link — use hash routing to avoid server 404 on direct visits */}
+          {/* Admin link — use hash routing to avoid server 404 on direct visits */}
           <a
             href="#/admin"
             onClick={(e) => {
@@ -91,20 +94,56 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchArticle = () => {
+  const fetchArticle = async () => {
     setIsLoading(true);
     setError(null);
-    fetch(BACKEND_API_URL) // uses fixed URL above
-      .then((res) => {
-        if (!res.ok) throw new Error("No article found. Waiting for n8n...");
-        return res.json();
-      })
-      .then(setArticle)
-      .catch((err) => {
-        setError(err.message);
-        setArticle(null);
-      })
-      .finally(() => setIsLoading(false));
+    setArticle(null);
+    try {
+      const res = await fetch(BACKEND_API_URL, { method: "GET" });
+      const ct = res.headers.get("content-type") || "";
+
+      if (!res.ok) {
+        // If server returned HTML (e.g. Render 503 page) give helpful message
+        if (ct.includes("text/html")) {
+          const html = await res.text().catch(() => "");
+          setError(
+            `Backend returned ${res.status}. Service may be down (HTML response).`
+          );
+          console.error("HTML response from backend:", html);
+        } else {
+          // Try to parse JSON error message
+          const json = await res.json().catch(() => null);
+          setError(
+            json && json.message
+              ? json.message
+              : `Request failed: ${res.status} ${res.statusText}`
+          );
+        }
+        return;
+      }
+
+      if (ct.includes("text/html")) {
+        // 200 but HTML -> treat as service down
+        const html = await res.text().catch(() => "");
+        setError("Unexpected HTML response from backend. Service may be down.");
+        console.error("HTML (200) from backend:", html);
+        return;
+      }
+
+      // Expect JSON article
+      const data = await res.json().catch(() => null);
+      if (!data) {
+        setError("Backend returned invalid JSON.");
+        return;
+      }
+
+      setArticle(data);
+    } catch (err) {
+      console.error("Error fetching article", err);
+      setError(String(err && err.message ? err.message : err));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -113,6 +152,13 @@ function App() {
 
   const handleApproveAndSend = async () => {
     if (!article) return;
+
+    if (!N8N_WEBHOOK_URL) {
+      alert(
+        "N8N webhook URL is not configured. Set N8N_WEBHOOK_URL in App.jsx before sending."
+      );
+      return;
+    }
 
     alert("Sending approval and URL to n8n...");
     try {
@@ -130,7 +176,7 @@ function App() {
       setArticle(null); // Clear article after approval
       setError("Article approved. Waiting for next article from n8n...");
     } catch (err) {
-      alert(`Error sending to n8n: ${err.message}`);
+      alert(`Error sending to n8n: ${err.message || err}`);
     }
   };
 
@@ -154,6 +200,15 @@ function App() {
   } else if (article) {
     content = (
       <ArticlePage article={article} onApproveClick={handleApproveAndSend} />
+    );
+  } else {
+    content = (
+      <div className="status-message">
+        No article available.
+        <button className="refresh-btn" onClick={handleRefresh}>
+          Check for New Article
+        </button>
+      </div>
     );
   }
 
