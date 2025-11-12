@@ -187,7 +187,11 @@ export default function AdminPane() {
               (log.data.workflow_name ||
                 log.data.execution_id ||
                 log.data.post_link ||
-                typeof log.data.article_url !== "undefined") ? (
+                typeof log.data.article_url !== "undefined" ||
+                log.data.node ||
+                log.data.error_message ||
+                log.data.error_description ||
+                log.data.execution_link) ? (
                 <div style={{ fontSize: 13, marginBottom: 8 }}>
                   {log.data.workflow_name && (
                     <div>
@@ -232,6 +236,36 @@ export default function AdminPane() {
                       ) : (
                         <em>null</em>
                       )}
+                    </div>
+                  )}
+                  {/* Failure-specific fields */}
+                  {log.type === "failure" && log.data.node && (
+                    <div>
+                      <strong>Node:</strong> {log.data.node}
+                    </div>
+                  )}
+                  {log.type === "failure" && log.data.error_message && (
+                    <div>
+                      <strong>Error Message:</strong> {log.data.error_message}
+                    </div>
+                  )}
+                  {log.type === "failure" && log.data.error_description && (
+                    <div>
+                      <strong>Error Description:</strong>{" "}
+                      {log.data.error_description}
+                    </div>
+                  )}
+                  {log.type === "failure" && log.data.execution_link && (
+                    <div>
+                      <strong>Execution Link:</strong>{" "}
+                      <a
+                        href={log.data.execution_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: "#0070f3" }}
+                      >
+                        {log.data.execution_link}
+                      </a>
                     </div>
                   )}
                 </div>
