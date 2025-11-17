@@ -214,6 +214,7 @@ export default function AdminPane() {
                 <th style={thStyle}>Status</th>
                 <th style={thStyle}>Workflow</th>
                 <th style={thStyle}>Execution ID</th>
+                <th style={thStyle}>Platform</th>
                 <th style={thStyle}>Details</th>
                 <th style={thStyle}>Links</th>
               </tr>
@@ -252,6 +253,26 @@ export default function AdminPane() {
                   </td>
                   <td style={tdStyle}>
                     <strong>{log.data?.execution_id || "—"}</strong>
+                  </td>
+                  <td style={tdStyle}>
+                    {log.data?.platform ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: 3,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          textTransform: "capitalize",
+                          background: "#e9ecef",
+                          color: "#495057",
+                        }}
+                      >
+                        {log.data.platform}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td style={{ ...tdStyle, maxWidth: 350 }}>
                     {/* Success details */}
@@ -333,6 +354,16 @@ export default function AdminPane() {
                           style={linkStyle}
                         >
                           📄 Article
+                        </a>
+                      )}
+                      {log.data?.article_edit_url && (
+                        <a
+                          href={log.data.article_edit_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={linkStyle}
+                        >
+                          ✏️ Edit Article
                         </a>
                       )}
                       {log.data?.database_link && (
