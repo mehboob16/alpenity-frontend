@@ -71,12 +71,12 @@ export default function AdminPane() {
     fetchLogs();
   }, []);
 
-  // Helper to get badge color based on type
+  // Helper to get badge color based on type - FIXED color for waiting
   const getTypeBadge = (type) => {
     const styles = {
       success: { bg: "#d4edda", color: "#155724", border: "#c3e6cb" },
       failure: { bg: "#f8d7da", color: "#721c24", border: "#f5c6cb" },
-      waiting: { bg: "#fff3cd", color: "#856404", border: "#ffeaa7" },
+      waiting: { bg: "#fff3cd", color: "#856404", border: "#ffc107" }, // FIXED: Changed border color
       info: { bg: "#d1ecf1", color: "#0c5460", border: "#bee5eb" },
     };
     const style = styles[type] || styles.info;
@@ -200,6 +200,7 @@ export default function AdminPane() {
               borderCollapse: "collapse",
               background: "#fff",
               boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              border: "1px solid #dee2e6", // ADD: outer border for table
             }}
           >
             <thead>
@@ -226,17 +227,25 @@ export default function AdminPane() {
                   }}
                 >
                   <td style={tdStyle}>
-                    <div style={{ fontSize: 12, color: "#666" }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "#666",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {new Date(log.timestamp).toLocaleString()}
                     </div>
                   </td>
                   <td style={tdStyle}>{getTypeBadge(log.type)}</td>
                   <td style={tdStyle}>
-                    <div style={{ fontSize: 13 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>
                       {log.data?.workflow_name || "—"}
                     </div>
                     {log.data?.workflow_id && (
-                      <div style={{ fontSize: 11, color: "#999" }}>
+                      <div
+                        style={{ fontSize: 11, color: "#999", marginTop: 2 }}
+                      >
                         ID: {log.data.workflow_id}
                       </div>
                     )}
@@ -244,7 +253,7 @@ export default function AdminPane() {
                   <td style={tdStyle}>
                     <strong>{log.data?.execution_id || "—"}</strong>
                   </td>
-                  <td style={{ ...tdStyle, maxWidth: 300 }}>
+                  <td style={{ ...tdStyle, maxWidth: 350 }}>
                     {/* Success details */}
                     {log.type === "success" && log.data?.post_link && (
                       <div style={{ fontSize: 12 }}>✅ Posted successfully</div>
@@ -352,12 +361,14 @@ const thStyle = {
   color: "#495057",
   textTransform: "uppercase",
   letterSpacing: "0.5px",
+  borderRight: "1px solid #dee2e6", // ADD: vertical borders between columns
 };
 
 const tdStyle = {
   padding: "12px 16px",
   fontSize: 13,
   verticalAlign: "top",
+  borderRight: "1px solid #dee2e6", // ADD: vertical borders between columns
 };
 
 const linkStyle = {
