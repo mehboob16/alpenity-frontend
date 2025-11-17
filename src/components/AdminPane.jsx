@@ -255,8 +255,22 @@ export default function AdminPane() {
                   </td>
                   <td style={{ ...tdStyle, maxWidth: 350 }}>
                     {/* Success details */}
-                    {log.type === "success" && log.data?.post_link && (
-                      <div style={{ fontSize: 12 }}>✅ Posted successfully</div>
+                    {log.type === "success" && (
+                      <div style={{ fontSize: 12 }}>
+                        <div>✅ Posted successfully</div>
+                        {log.data?.draft_workflow_execution_id && (
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#666",
+                              marginTop: 2,
+                            }}
+                          >
+                            Draft Execution:{" "}
+                            {log.data.draft_workflow_execution_id}
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Waiting details */}
