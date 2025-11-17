@@ -14,7 +14,6 @@ export default function AdminPane() {
       const res = await fetch(`${BACKEND}/api/logs`);
       const ct = res.headers.get("content-type") || "";
 
-      // Detect HTML (e.g., Render 503 page) and show a useful message
       if (!res.ok) {
         if (ct.includes("text/html")) {
           const html = await res.text();
@@ -34,7 +33,6 @@ export default function AdminPane() {
       }
 
       if (ct.includes("text/html")) {
-        // Unexpected HTML on 200
         const html = await res.text();
         setErrorMsg(
           "Unexpected HTML response from logs endpoint. Service may be down."
@@ -45,8 +43,8 @@ export default function AdminPane() {
       }
 
       const data = await res.json();
-      // Expecting an array (backend returns newest-first array). Guard if it returns object.
-      setLogs(Array.isArray(data) ? data : []);
+      // Backend returns newest first, reverse to show newest at bottom
+      setLogs(Array.isArray(data) ? data.reverse() : []);
     } catch (err) {
       console.error("Error fetching logs", err);
       setErrorMsg(String(err.message || err));
@@ -73,42 +71,84 @@ export default function AdminPane() {
     fetchLogs();
   }, []);
 
+  // Helper to get badge color based on type
+  const getTypeBadge = (type) => {
+    const styles = {
+      success: { bg: "#d4edda", color: "#155724", border: "#c3e6cb" },
+      failure: { bg: "#f8d7da", color: "#721c24", border: "#f5c6cb" },
+      waiting: { bg: "#fff3cd", color: "#856404", border: "#ffeaa7" },
+      info: { bg: "#d1ecf1", color: "#0c5460", border: "#bee5eb" },
+    };
+    const style = styles[type] || styles.info;
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          padding: "4px 8px",
+          borderRadius: 4,
+          fontSize: 12,
+          fontWeight: 600,
+          textTransform: "capitalize",
+          background: style.bg,
+          color: style.color,
+          border: `1px solid ${style.border}`,
+        }}
+      >
+        {type === "waiting" ? "Waiting for Approval" : type}
+      </span>
+    );
+  };
+
   return (
     <div
-      style={{ padding: 20, fontFamily: "system-ui, Arial", maxWidth: 1100 }}
+      style={{
+        padding: 20,
+        fontFamily: "system-ui, Arial",
+        maxWidth: 1400,
+        margin: "0 auto",
+      }}
     >
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          marginBottom: 20,
         }}
       >
-        <h1>Admin — Logs</h1>
+        <h1 style={{ margin: 0 }}>Admin — Workflow Logs</h1>
         <div>
           <button
             onClick={fetchLogs}
             disabled={loading}
-            style={{ marginRight: 8 }}
+            style={{
+              marginRight: 8,
+              padding: "8px 16px",
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
           >
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? "Refreshing..." : "🔄 Refresh"}
           </button>
           <button
             onClick={clearLogs}
-            style={{ background: "#c33", color: "#fff" }}
+            style={{
+              background: "#dc3545",
+              color: "#fff",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: 4,
+              cursor: "pointer",
+            }}
           >
-            Clear Logs
+            🗑️ Clear Logs
           </button>
-
-          {/* Back using hash routing so direct /admin visits don't 404 */}
           <button
             onClick={() => {
               window.location.hash = "/";
-              // trigger hashchange if needed (browsers do this automatically)
             }}
-            style={{ marginLeft: 8 }}
+            style={{ marginLeft: 8, padding: "8px 16px" }}
           >
-            Back
+            ← Back
           </button>
         </div>
       </div>
@@ -116,21 +156,16 @@ export default function AdminPane() {
       {errorMsg ? (
         <div
           style={{
-            marginTop: 12,
+            marginBottom: 16,
             padding: 12,
             background: "#fff3f3",
             border: "1px solid #f2c2c2",
             color: "#801111",
+            borderRadius: 4,
           }}
         >
           <strong>Error:</strong> {errorMsg}
-          <div
-            style={{
-              marginTop: 8,
-              color: "#555",
-              fontSize: 13,
-            }}
-          >
+          <div style={{ marginTop: 8, color: "#555", fontSize: 13 }}>
             If you see an HTML/503 page, your backend host (Render) may be
             unavailable. Try running the backend locally at{" "}
             <a
@@ -140,153 +175,195 @@ export default function AdminPane() {
               style={{ color: "#0070f3" }}
             >
               http://localhost:3001
-            </a>{" "}
-            for tests.
+            </a>
           </div>
         </div>
       ) : null}
 
-      <div style={{ marginTop: 16 }}>
-        {logs.length === 0 && !errorMsg ? (
-          <div style={{ color: "#666" }}>No logs yet.</div>
-        ) : (
-          logs.map((log) => (
-            <div
-              key={log.id}
-              style={{
-                border: "1px solid #e6e6e6",
-                padding: 12,
-                marginBottom: 8,
-                borderLeft:
-                  log.type === "failure"
-                    ? "4px solid #c33"
-                    : "4px solid #2a9d8f",
-                background: "#fff",
-              }}
-            >
-              <div
+      {logs.length === 0 && !errorMsg ? (
+        <div
+          style={{
+            padding: 40,
+            textAlign: "center",
+            color: "#999",
+            border: "2px dashed #ddd",
+            borderRadius: 8,
+          }}
+        >
+          No logs yet. Logs will appear here once workflows execute.
+        </div>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              background: "#fff",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            }}
+          >
+            <thead>
+              <tr
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
+                  background: "#f8f9fa",
+                  borderBottom: "2px solid #dee2e6",
                 }}
               >
-                <div>
-                  <strong style={{ textTransform: "capitalize" }}>
-                    {log.type}
-                  </strong>{" "}
-                  <span style={{ color: "#666", marginLeft: 8 }}>
-                    {new Date(log.timestamp).toLocaleString()}
-                  </span>
-                </div>
-                <div style={{ color: "#999", fontSize: 12 }}>{log.id}</div>
-              </div>
+                <th style={thStyle}>Timestamp</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Workflow</th>
+                <th style={thStyle}>Execution ID</th>
+                <th style={thStyle}>Details</th>
+                <th style={thStyle}>Links</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr
+                  key={log.id}
+                  style={{
+                    borderBottom: "1px solid #dee2e6",
+                  }}
+                >
+                  <td style={tdStyle}>
+                    <div style={{ fontSize: 12, color: "#666" }}>
+                      {new Date(log.timestamp).toLocaleString()}
+                    </div>
+                  </td>
+                  <td style={tdStyle}>{getTypeBadge(log.type)}</td>
+                  <td style={tdStyle}>
+                    <div style={{ fontSize: 13 }}>
+                      {log.data?.workflow_name || "—"}
+                    </div>
+                    {log.data?.workflow_id && (
+                      <div style={{ fontSize: 11, color: "#999" }}>
+                        ID: {log.data.workflow_id}
+                      </div>
+                    )}
+                  </td>
+                  <td style={tdStyle}>
+                    <strong>{log.data?.execution_id || "—"}</strong>
+                  </td>
+                  <td style={{ ...tdStyle, maxWidth: 300 }}>
+                    {/* Success details */}
+                    {log.type === "success" && log.data?.post_link && (
+                      <div style={{ fontSize: 12 }}>✅ Posted successfully</div>
+                    )}
 
-              {/* Render known workflow fields if present (incoming schema) */}
-              {log.data &&
-              (log.data.workflow_name ||
-                log.data.execution_id ||
-                log.data.post_link ||
-                typeof log.data.article_url !== "undefined" ||
-                log.data.node ||
-                log.data.error_message ||
-                log.data.error_description ||
-                log.data.execution_link) ? (
-                <div style={{ fontSize: 13, marginBottom: 8 }}>
-                  {log.data.workflow_name && (
-                    <div>
-                      <strong>Workflow:</strong> {log.data.workflow_name}
-                    </div>
-                  )}
-                  {log.data.execution_id && (
-                    <div>
-                      <strong>Execution ID:</strong> {log.data.execution_id}
-                    </div>
-                  )}
-                  {log.data.workflow_id && (
-                    <div>
-                      <strong>Workflow ID:</strong> {log.data.workflow_id}
-                    </div>
-                  )}
-                  {log.data.post_link && (
-                    <div>
-                      <strong>Post:</strong>{" "}
-                      <a
-                        href={log.data.post_link}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: "#0070f3" }}
-                      >
-                        {log.data.post_link}
-                      </a>
-                    </div>
-                  )}
-                  {typeof log.data.article_url !== "undefined" && (
-                    <div>
-                      <strong>Article URL:</strong>{" "}
-                      {log.data.article_url ? (
+                    {/* Waiting details */}
+                    {log.type === "waiting" && (
+                      <div style={{ fontSize: 12, color: "#856404" }}>
+                        ⏳ Awaiting manual approval
+                      </div>
+                    )}
+
+                    {/* Failure details */}
+                    {log.type === "failure" && (
+                      <div style={{ fontSize: 12 }}>
+                        {log.data?.node && (
+                          <div>
+                            <strong>Node:</strong> {log.data.node}
+                          </div>
+                        )}
+                        {log.data?.error_message && (
+                          <div style={{ color: "#721c24", marginTop: 4 }}>
+                            ❌ {log.data.error_message}
+                          </div>
+                        )}
+                        {log.data?.error_description && (
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#666",
+                              marginTop: 2,
+                            }}
+                          >
+                            {log.data.error_description}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td style={tdStyle}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                      }}
+                    >
+                      {log.data?.post_link && (
+                        <a
+                          href={log.data.post_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={linkStyle}
+                        >
+                          📱 View Post
+                        </a>
+                      )}
+                      {log.data?.article_url && (
                         <a
                           href={log.data.article_url}
                           target="_blank"
                           rel="noreferrer"
-                          style={{ color: "#0070f3" }}
+                          style={linkStyle}
                         >
-                          {log.data.article_url}
+                          📄 Article
                         </a>
-                      ) : (
-                        <em>null</em>
+                      )}
+                      {log.data?.database_link && (
+                        <a
+                          href={log.data.database_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={linkStyle}
+                        >
+                          🗄️ Database
+                        </a>
+                      )}
+                      {log.data?.execution_link && (
+                        <a
+                          href={log.data.execution_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={linkStyle}
+                        >
+                          🔗 Execution
+                        </a>
                       )}
                     </div>
-                  )}
-                  {/* Failure-specific fields */}
-                  {log.type === "failure" && log.data.node && (
-                    <div>
-                      <strong>Node:</strong> {log.data.node}
-                    </div>
-                  )}
-                  {log.type === "failure" && log.data.error_message && (
-                    <div>
-                      <strong>Error Message:</strong> {log.data.error_message}
-                    </div>
-                  )}
-                  {log.type === "failure" && log.data.error_description && (
-                    <div>
-                      <strong>Error Description:</strong>{" "}
-                      {log.data.error_description}
-                    </div>
-                  )}
-                  {log.type === "failure" && log.data.execution_link && (
-                    <div>
-                      <strong>Execution Link:</strong>{" "}
-                      <a
-                        href={log.data.execution_link}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: "#0070f3" }}
-                      >
-                        {log.data.execution_link}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-
-              {/* Raw JSON details */}
-              <pre
-                style={{
-                  whiteSpace: "pre-wrap",
-                  fontSize: 12,
-                  margin: 0,
-                  maxHeight: 200,
-                  overflowY: "auto",
-                }}
-              >
-                {JSON.stringify(log.data, null, 2)}
-              </pre>
-            </div>
-          ))
-        )}
-      </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
+
+const thStyle = {
+  padding: "12px 16px",
+  textAlign: "left",
+  fontWeight: 600,
+  fontSize: 13,
+  color: "#495057",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+};
+
+const tdStyle = {
+  padding: "12px 16px",
+  fontSize: 13,
+  verticalAlign: "top",
+};
+
+const linkStyle = {
+  display: "inline-block",
+  fontSize: 12,
+  color: "#0070f3",
+  textDecoration: "none",
+  padding: "2px 0",
+};
