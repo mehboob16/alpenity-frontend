@@ -6,12 +6,15 @@ export default function AdminPane() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20); // page size
+  const [total, setTotal] = useState(0);
 
-  async function fetchLogs() {
+  async function fetchLogs(p = page) {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`${BACKEND}/api/logs`);
+      const res = await fetch(`${BACKEND}/api/logs?page=${p}&limit=${limit}`);
       const ct = res.headers.get("content-type") || "";
 
       if (!res.ok) {
@@ -29,6 +32,7 @@ export default function AdminPane() {
           );
         }
         setLogs([]);
+        setTotal(0);
         return;
       }
 
@@ -39,16 +43,20 @@ export default function AdminPane() {
         );
         console.error("HTML response (200) from logs endpoint:", html);
         setLogs([]);
+        setTotal(0);
         return;
       }
 
-      const data = await res.json();
-      // Backend returns newest first, reverse to show newest at bottom
-      setLogs(Array.isArray(data) ? data.reverse() : []);
+      const payload = await res.json();
+      // payload: { logs: [...], total, page, limit } ; backend returns newest-first
+      setLogs(Array.isArray(payload.logs) ? payload.logs : []);
+      setTotal(typeof payload.total === "number" ? payload.total : 0);
+      setPage(typeof payload.page === "number" ? payload.page : p);
     } catch (err) {
       console.error("Error fetching logs", err);
       setErrorMsg(String(err.message || err));
       setLogs([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -60,6 +68,7 @@ export default function AdminPane() {
       const res = await fetch(`${BACKEND}/api/logs/clear`, { method: "POST" });
       if (!res.ok) throw new Error(`Status ${res.status}`);
       setLogs([]);
+      setTotal(0);
       setErrorMsg(null);
     } catch (err) {
       console.error("Error clearing logs", err);
@@ -68,8 +77,18 @@ export default function AdminPane() {
   }
 
   useEffect(() => {
-    fetchLogs();
+    fetchLogs(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handlePrev = () => {
+    if (page <= 1) return;
+    fetchLogs(page - 1);
+  };
+  const handleNext = () => {
+    if (page * limit >= total) return;
+    fetchLogs(page + 1);
+  };
 
   // Helper to get badge color based on type - FIXED color for waiting
   const getTypeBadge = (type) => {
@@ -113,13 +132,13 @@ export default function AdminPane() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 20,
+          marginBottom: 12,
         }}
       >
         <h1 style={{ margin: 0 }}>Admin — Workflow Logs</h1>
         <div>
           <button
-            onClick={fetchLogs}
+            onClick={() => fetchLogs(page)}
             disabled={loading}
             style={{
               marginRight: 8,
@@ -180,7 +199,33 @@ export default function AdminPane() {
         </div>
       ) : null}
 
-      {logs.length === 0 && !errorMsg ? (
+      <div
+        style={{
+          marginBottom: 12,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ color: "#666" }}>
+          Showing page {page} — {Math.min(total, (page - 1) * limit + 1)} to{" "}
+          {Math.min(total, page * limit)} of {total}
+        </div>
+        <div>
+          <button
+            onClick={handlePrev}
+            disabled={page <= 1}
+            style={{ marginRight: 8 }}
+          >
+            ◀ Prev
+          </button>
+          <button onClick={handleNext} disabled={page * limit >= total}>
+            Next ▶
+          </button>
+        </div>
+      </div>
+
+      {logs.length === 0 ? (
         <div
           style={{
             padding: 40,
@@ -190,7 +235,7 @@ export default function AdminPane() {
             borderRadius: 8,
           }}
         >
-          No logs yet. Logs will appear here once workflows execute.
+          No logs yet.
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -199,8 +244,8 @@ export default function AdminPane() {
               width: "100%",
               borderCollapse: "collapse",
               background: "#fff",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-              border: "1px solid #dee2e6", // ADD: outer border for table
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #dee2e6",
             }}
           >
             <thead>
@@ -423,3 +468,31 @@ const linkStyle = {
   textDecoration: "none",
   padding: "2px 0",
 };
+
+// Helper reused from previous file (badge rendering)
+function getTypeBadge(type) {
+  const styles = {
+    success: { bg: "#d4edda", color: "#155724", border: "#c3e6cb" },
+    failure: { bg: "#f8d7da", color: "#721c24", border: "#f5c6cb" },
+    waiting: { bg: "#fff3cd", color: "#856404", border: "#ffc107" },
+    info: { bg: "#d1ecf1", color: "#0c5460", border: "#bee5eb" },
+  };
+  const style = styles[type] || styles.info;
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "4px 8px",
+        borderRadius: 4,
+        fontSize: 12,
+        fontWeight: 600,
+        textTransform: "capitalize",
+        background: style.bg,
+        color: style.color,
+        border: `1px solid ${style.border}`,
+      }}
+    >
+      {type === "waiting" ? "Waiting for Approval" : type}
+    </span>
+  );
+}
