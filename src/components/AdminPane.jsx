@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const BACKEND = "https://alpenity-backend.onrender.com";
+const BACKEND = "https://n8n.cupidworld.com";
 
 export default function AdminPane() {
   const [logs, setLogs] = useState([]);
