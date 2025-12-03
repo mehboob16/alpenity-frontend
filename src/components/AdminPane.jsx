@@ -5,6 +5,8 @@ const BACKEND = "https://n8n.cupidworld.com";
 const BACKEND_USERNAME = import.meta.env.VITE_BACKEND_USERNAME || "username";
 const BACKEND_PASSWORD = import.meta.env.VITE_BACKEND_PASSWORD || "password";
 
+console.log(BACKEND_USERNAME, BACKEND_PASSWORD);
+
 // Helper to create Basic Auth header
 const getAuthHeaders = () => {
   const credentials = btoa(`${BACKEND_USERNAME}:${BACKEND_PASSWORD}`);
@@ -73,23 +75,6 @@ export default function AdminPane() {
       setTotal(0);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function clearLogs() {
-    if (!confirm("Clear all logs? (demo)")) return;
-    try {
-      const res = await fetch(`${BACKEND}/api/logs/clear`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      setLogs([]);
-      setTotal(0);
-      setErrorMsg(null);
-    } catch (err) {
-      console.error("Error clearing logs", err);
-      setErrorMsg("Failed to clear logs: " + err.message);
     }
   }
 
@@ -164,27 +149,6 @@ export default function AdminPane() {
             }}
           >
             {loading ? "Refreshing..." : "🔄 Refresh"}
-          </button>
-          <button
-            onClick={clearLogs}
-            style={{
-              background: "#dc3545",
-              color: "#fff",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: 4,
-              cursor: "pointer",
-            }}
-          >
-            🗑️ Clear Logs
-          </button>
-          <button
-            onClick={() => {
-              window.location.hash = "/";
-            }}
-            style={{ marginLeft: 8, padding: "8px 16px" }}
-          >
-            ← Back
           </button>
         </div>
       </div>
