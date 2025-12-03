@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from "react";
 
 const BACKEND = "https://n8n.cupidworld.com";
+// Read credentials from environment variables (Vite uses import.meta.env)
+const BACKEND_USERNAME = import.meta.env.BACKEND_USERNAME || "username";
+const BACKEND_PASSWORD = import.meta.env.BACKEND_PASSWORD || "password";
+
+// Helper to create Basic Auth header
+const getAuthHeaders = () => {
+  const credentials = btoa(`${BACKEND_USERNAME}:${BACKEND_PASSWORD}`);
+  return {
+    Authorization: `Basic ${credentials}`,
+    "Content-Type": "application/json",
+  };
+};
 
 export default function AdminPane() {
   const [logs, setLogs] = useState([]);
@@ -14,7 +26,9 @@ export default function AdminPane() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`${BACKEND}/api/logs?page=${p}&limit=${limit}`);
+      const res = await fetch(`${BACKEND}/api/logs?page=${p}&limit=${limit}`, {
+        headers: getAuthHeaders(),
+      });
       const ct = res.headers.get("content-type") || "";
 
       if (!res.ok) {
@@ -65,7 +79,10 @@ export default function AdminPane() {
   async function clearLogs() {
     if (!confirm("Clear all logs? (demo)")) return;
     try {
-      const res = await fetch(`${BACKEND}/api/logs/clear`, { method: "POST" });
+      const res = await fetch(`${BACKEND}/api/logs/clear`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) throw new Error(`Status ${res.status}`);
       setLogs([]);
       setTotal(0);
