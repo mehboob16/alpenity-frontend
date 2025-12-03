@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 
 const BACKEND = "https://n8n.cupidworld.com";
 // Read credentials from environment variables (Vite uses import.meta.env)
-const BACKEND_USERNAME = import.meta.env.BACKEND_USERNAME || "username";
-const BACKEND_PASSWORD = import.meta.env.BACKEND_PASSWORD || "password";
+const BACKEND_USERNAME = import.meta.env.VITE_BACKEND_USERNAME || "username";
+const BACKEND_PASSWORD = import.meta.env.VITE_BACKEND_PASSWORD || "password";
 
 // Helper to create Basic Auth header
 const getAuthHeaders = () => {
